@@ -780,7 +780,7 @@ end
 
 function Esp.Destroy()
     if not EspGui then return end
-    for player, drawings in ipairs(State.Esp.Drawings) do
+    for player, drawings in pairs(State.Esp.Drawings) do
         pcall(function() drawings.Box:Remove() end)
         pcall(function() drawings.Label:Destroy() end)
     end
@@ -803,7 +803,7 @@ function Esp.CreateDrawings(player)
     label.BackgroundTransparency = 1
     label.BorderSizePixel = 0
     label.AnchorPoint = Vector2_new(0.5, 0.5)
-    label.Size = UDim2.new(0, 140, 0, 16)
+    label.Size = UDim2_new(0, 140, 0, 16)
     label.TextSize = 8
     label.TextColor3 = COLORS.DefaultChams
     label.TextStrokeColor3 = COLORS.Black
@@ -823,7 +823,7 @@ function Esp.DestroyDrawings(player)
 end
 
 function Esp.ClearAll()
-    for player in ipairs(State.Esp.Drawings) do
+    for player in pairs(State.Esp.Drawings) do
         Esp.DestroyDrawings(player)
     end
     Esp.Destroy()
@@ -844,11 +844,10 @@ function Esp.Update()
         return
     end
     
-    if not EspGui then
-        Esp.Initialize()
-    end
+    if not EspGui then Esp.Initialize() end
 
     local seenPlayers = {}
+    local localPos = Camera.CFrame.Position
 
     GameModules.Replication.operateOnAllEntries(function(player, entry)
         if player == LocalPlayer then return end
@@ -858,22 +857,37 @@ function Esp.Update()
         end
 
         local charHash = Utility.GetCharacterHash(entry)
-        local torso = charHash and charHash.Torso
-        local head = charHash and charHash.Head
+        if not charHash then 
+            Esp.DestroyDrawings(player)
+            return 
+        end
 
+        local torso = charHash.Torso
+        local head = charHash.Head
         if not torso or not head then
             Esp.DestroyDrawings(player)
             return
         end
 
+        local characterModel = entry._thirdPersonObject and entry._thirdPersonObject:getCharacterModel()
+        if not characterModel then
+            Esp.DestroyDrawings(player)
+            return
+        end
+
         local lowestY, highestY = math_huge, -math_huge
-        for _, part in ipairs(charHash) do
-            if typeof(part) == "Instance" and part:IsA("BasePart") then
+        for _, part in ipairs(characterModel:GetDescendants()) do
+            if part:IsA("BasePart") then
                 local bottom = part.Position.Y - part.Size.Y * 0.5
                 local top = part.Position.Y + part.Size.Y * 0.5
                 if bottom < lowestY then lowestY = bottom end
                 if top > highestY then highestY = top end
             end
+        end
+
+        if lowestY == math_huge or highestY == -math_huge then
+            Esp.DestroyDrawings(player)
+            return
         end
 
         local feetWorld = Vector3_new(torso.Position.X, lowestY, torso.Position.Z)
@@ -882,7 +896,7 @@ function Esp.Update()
         local feetScreen, feetVisible = Camera:WorldToViewportPoint(feetWorld)
         local headScreen, headVisible = Camera:WorldToViewportPoint(headWorld)
 
-        if not (feetVisible and headVisible) then
+        if not (feetVisible and headVisible) or feetScreen.Z <= 0 or headScreen.Z <= 0 then
             Esp.DestroyDrawings(player)
             return
         end
@@ -903,14 +917,14 @@ function Esp.Update()
         if State.Esp.ShowVisible then
             local isVisible = Utility.HasLineOfSight(torso)
             drawings.Label.Text = isVisible and "VISIBLE" or "NOT VISIBLE"
-            drawings.Label.Position = UDim2.new(0, feetScreen.X, 0, feetScreen.Y + 6)
+            drawings.Label.Position = UDim2_new(0, feetScreen.X, 0, feetScreen.Y + 6)
             drawings.Label.Visible = true
         else
             drawings.Label.Visible = false
         end
     end)
 
-    for player in ipairs(State.Esp.Drawings) do
+    for player in pairs(State.Esp.Drawings) do
         if not seenPlayers[player] then
             Esp.DestroyDrawings(player)
         end
