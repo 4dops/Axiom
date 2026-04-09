@@ -34,7 +34,7 @@ local CONFIG = {
 
 local COLORS = {
     DefaultFov = Color3_new(1, 1, 1),
-    DefaultFovFill = Color3_new(0, 191/255, 1),
+    DefaultFovFill = Color3_new(1, 64/255, 0),
     DefaultSnap = Color3_new(1, 1, 1),
     DefaultChams = Color3_new(0, 191/255, 1),
     Black = Color3_new(0, 0, 0),
