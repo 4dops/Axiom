@@ -1,4 +1,5 @@
 if getgenv().executed then return end
+getgenv().executed = true
 
 local executor = string.lower(identifyexecutor and identifyexecutor() or "")
 local sourceUrl = "https://raw.githubusercontent.com/4dops/Axiom/refs/heads/main/games/phantomforces/Axiom.lua"
@@ -13,9 +14,7 @@ local threadTemplate = [[
 ]]
 
 local function fetchSource()
-    local success, result = pcall(function()
-        return game:HttpGet(sourceUrl, true)
-    end)
+    local success, result = pcall(game.HttpGet, game, sourceUrl, true)
     return success and result or nil
 end
 
@@ -33,14 +32,11 @@ local function executeActorMethod(sourceCode, runnerName, getterName)
 end
 
 local handlers = {
-    { match = "choco", runner = "run_on_actor", getter = "get_deleted_actors" },
     { match = "volt", runner = "run_on_actor", getter = "getactors" },
     { match = "potassium", runner = "run_on_thread", getter = "getactorthreads" },
     { match = "wave", runner = "run_on_thread", getter = "getactorthreads" },
-    { match = "nihon", runner = "run_on_actor", getter = "getdeletedactors" },
     { match = "synapse z", runner = "run_on_actor", getter = "getdeletedactors" },
-    { match = "yubx", runner = "run_on_actor", getter = "getdeletedactors" },
-    { match = "cosmic", runner = "run_on_actor", getter = "getdeletedactors" }
+    { match = "volcano", runner = "run_on_actor", getter = "get_actors" }
 }
 
 local sourceCode = fetchSource()
